@@ -1,7 +1,6 @@
 -- Made by reallance0424
--- This script is open source
--- This script is keyless
--- do not copy
+-- This script is open source and keyless
+-- do not copy without permission 
 
 local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 

@@ -1,38 +1,47 @@
 -- do not copy or steal
 -- this script is open source and keyless
 
-local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
+-- Load Rayfield UI
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-local Window = WindUI:CreateWindow({
-    Title = "Steamline Hub",
-    Icon = "target",
-    Author = "by reallance0424",
-    Folder = "DeadRails",
-    Size = UDim2.fromOffset(200, 200),
-    Transparent = true,
-    Theme = "Dark",
-    SideBarWidth = 120,
+local Window = Rayfield:CreateWindow({
+    Name = "Steamline Hub",
+    LoadingTitle = "Loading Steamline Hub...",
+    LoadingSubtitle = "by reallance0424",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "SteamlineX",
+        FileName = "DeadRails_Config"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "", 
+        RememberJoins = true
+    },
+    KeySystem = false
 })
 
 local Tabs = {
-    AimbotTab = Window:Tab({ Title = "Aimbot", Icon = "target", Desc = "Enable Aimbot" }),
-    ESPTab = Window:Tab({ Title = "ESP", Icon = "eye", Desc = "ESP for items and NPCs" }),
-    BringItemTab = Window:Tab({ Title = "Bring Items", Icon = "box", Desc = "Teleport items to you" })
+    AimbotTab = Window:CreateTab("Aimbot", 4483362458),
+    ESPTab = Window:CreateTab("ESP", 4483362458),
+    BringItemTab = Window:CreateTab("Bring Items", 4483362458)
 }
 
-Window:SelectTab(1)
-
+-- Services
 local RunService = game:GetService("RunService")
 local Cam = workspace.CurrentCamera
 local Player = game:GetService("Players").LocalPlayer
 
--- **Aimbot Variables**
+-- Aimbot Variables
 local aimbotEnabled = false
 local validNPCs = {}
-local raycastParams = RaycastParams.new()
-raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 
--- **NPC Detection**
+-- ESP Variables
+local ESPHandles = {}
+local ESPItemsEnabled = false
+local ESPMobsEnabled = false
+
+-- Function to check if an object is an NPC
 local function isNPC(obj)
     return obj:IsA("Model") 
         and obj:FindFirstChild("Humanoid")
@@ -42,28 +51,23 @@ local function isNPC(obj)
         and not game:GetService("Players"):GetPlayerFromCharacter(obj)
 end
 
+-- Update NPCs List
 local function updateNPCs()
-    local tempTable = {}
+    validNPCs = {}
     for _, obj in ipairs(workspace:GetDescendants()) do
         if isNPC(obj) then
-            tempTable[obj] = true
+            table.insert(validNPCs, obj)
         end
-    end
-    validNPCs = {} -- Reset valid NPCs
-    for obj in pairs(tempTable) do
-        table.insert(validNPCs, obj)
     end
 end
 
--- **Aimbot Target Selection**
+-- Find the nearest NPC
 local function getTarget()
     local nearest, minDistance = nil, math.huge
     local viewportCenter = Cam.ViewportSize / 2
-    raycastParams.FilterDescendantsInstances = {Player.Character}
-    
+
     for _, npc in ipairs(validNPCs) do
-        local predictedPos = npc.HumanoidRootPart.Position
-        local screenPos, visible = Cam:WorldToViewportPoint(predictedPos)
+        local screenPos, visible = Cam:WorldToViewportPoint(npc.HumanoidRootPart.Position)
         if visible and screenPos.Z > 0 then
             local distance = (Vector2.new(screenPos.X, screenPos.Y) - viewportCenter).Magnitude
             if distance < minDistance then
@@ -75,23 +79,22 @@ local function getTarget()
     return nearest
 end
 
--- **Aimbot Function**
+-- Aim at Target
 local function aim(targetPosition)
     local currentCF = Cam.CFrame
     local newLookVector = currentCF.LookVector:Lerp((targetPosition - currentCF.Position).Unit, 0.581)
     Cam.CFrame = CFrame.new(currentCF.Position, currentCF.Position + newLookVector)
 end
 
--- **Aimbot Toggle UI**
-Tabs.AimbotTab:Toggle({
-    Title = "Enable Aimbot", -- **This was missing! Now added.**
-    Default = false,
+-- Aimbot Toggle
+Tabs.AimbotTab:CreateToggle({
+    Name = "Enable Aimbot",
+    CurrentValue = false,
     Callback = function(value)
         aimbotEnabled = value
     end
 })
 
--- **Aimbot Logic**
 RunService.Heartbeat:Connect(function()
     updateNPCs()
     if aimbotEnabled then
@@ -102,12 +105,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- **ESP Variables**
-local ESPHandles = {}
-local ESPItemsEnabled = false
-local ESPMobsEnabled = false
-
--- **ESP Function**
+-- **ESP Functions**
 local function CreateESP(object, color)
     if not object or not object.PrimaryPart or ESPHandles[object] then return end
 
@@ -121,7 +119,6 @@ local function CreateESP(object, color)
     ESPHandles[object] = highlight
 end
 
--- **ESP Clearing Function**
 local function ClearESP(category)
     for obj, handle in pairs(ESPHandles) do
         if handle then
@@ -134,7 +131,6 @@ local function ClearESP(category)
     end
 end
 
--- **ESP Update Functions**
 local function UpdateESPItems()
     ClearESP("Items")
     local runtimeItems = workspace:FindFirstChild("RuntimeItems")
@@ -164,9 +160,9 @@ local function UpdateESPMobs()
 end
 
 -- **ESP Toggle UI**
-Tabs.ESPTab:Toggle({
-    Title = "ESP Items",
-    Default = false,
+Tabs.ESPTab:CreateToggle({
+    Name = "ESP Items",
+    CurrentValue = false,
     Callback = function(value)
         ESPItemsEnabled = value
         if value then
@@ -177,9 +173,9 @@ Tabs.ESPTab:Toggle({
     end
 })
 
-Tabs.ESPTab:Toggle({
-    Title = "ESP Mobs",
-    Default = false,
+Tabs.ESPTab:CreateToggle({
+    Name = "ESP Mobs",
+    CurrentValue = false,
     Callback = function(value)
         ESPMobsEnabled = value
         if value then
@@ -190,7 +186,7 @@ Tabs.ESPTab:Toggle({
     end
 })
 
--- **Bring Items Section**
+-- **Item Teleport Section**
 local function GetItemNames()
     local items = {}
     local runtimeItems = workspace:FindFirstChild("RuntimeItems")
@@ -204,28 +200,24 @@ local function GetItemNames()
     return items
 end
 
-local Dropdown = Tabs.BringItemTab:Dropdown({
-    Title = "Choose Item",
+local Dropdown = Tabs.BringItemTab:CreateDropdown({
+    Name = "Choose Item",
     Options = GetItemNames(),
     CurrentOption = "Select an item",
     MultipleOptions = false,
-    Flag = "ItemDropdown",
     Callback = function(selectedItem)
-        if type(selectedItem) == "table" then
-            selectedItem = selectedItem[1]
-        end
     end
 })
 
-Tabs.BringItemTab:Button({
-    Title = "Refresh Items",
+Tabs.BringItemTab:CreateButton({
+    Name = "Refresh Items",
     Callback = function()
         Dropdown:Refresh(GetItemNames())
     end
 })
 
-Tabs.BringItemTab:Button({
-    Title = "Collect Selected Item",
+Tabs.BringItemTab:CreateButton({
+    Name = "Collect Selected Item",
     Callback = function()
         local selectedItemName = Dropdown.CurrentOption
         if selectedItemName == "Select an item" then return end
@@ -233,16 +225,30 @@ Tabs.BringItemTab:Button({
         local runtimeItems = workspace:FindFirstChild("RuntimeItems")
         if not runtimeItems then return end
 
-        local selectedItem
         for _, item in ipairs(runtimeItems:GetDescendants()) do
             if item:IsA("Model") and item.Name == selectedItemName then
-                selectedItem = item
+                item:SetPrimaryPartCFrame(Player.Character.HumanoidRootPart.CFrame + Vector3.new(0, 1, 0))
                 break
             end
         end
+    end
+})
 
-        if selectedItem and selectedItem.PrimaryPart then
-            selectedItem:SetPrimaryPartCFrame(Player.Character.HumanoidRootPart.CFrame + Vector3.new(0, 1, 0))
+Tabs.BringItemTab:CreateButton({
+    Name = "Bring Weapons & Ammo",
+    Callback = function()
+        local itemsFolder = workspace:FindFirstChild("RuntimeItems")
+        if not itemsFolder then return end
+
+        local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        for _, item in ipairs(itemsFolder:GetChildren()) do
+            if item:IsA("Model") then
+                if item.Name:lower():find("gun") or item.Name:lower():find("ammo") then
+                    item:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 1, 0))
+                end
+            end
         end
     end
 })

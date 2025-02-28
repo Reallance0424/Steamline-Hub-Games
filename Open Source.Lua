@@ -1,14 +1,13 @@
--- Made by reallance0424
--- This script is open source and keyless
--- do not copy without permission 
+-- do not copy or steal
+-- this script is open source and keyless
 
 local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
 local Window = WindUI:CreateWindow({
-    Title = "Steamline X Hub",
+    Title = "Steamline Hub",
     Icon = "target",
-    Author = "by reallance0424",
-    Folder = "DeadRails",
+    Author = "by Reallance0424",
+    Folder = "CloudHub",
     Size = UDim2.fromOffset(200, 200),
     Transparent = true,
     Theme = "Dark",
@@ -16,13 +15,14 @@ local Window = WindUI:CreateWindow({
 })
 
 local Tabs = {
-    AimbotTab = Window:Tab({ Title = "Function", Icon = "crosshair", Desc = "Configure aimbot settings." }),
+    AimbotTab = Window:Tab({ Title = "Aimbot", Icon = "crosshair", Desc = "Configure aimbot settings." }),
+    ESPTab = Window:Tab({ Title = "ESP", Icon = "eye", Desc = "Configure ESP settings." }),
     BringItemTab = Window:Tab({ Title = "Bring Item", Icon = "box", Desc = "Teleport items to you." }),
 }
 
 Window:SelectTab(1)
 
--- Aimbot Mobs
+-- // Aimbot System \\ --
 local RunService = game:GetService("RunService")
 local Cam = workspace.CurrentCamera
 local Player = game:GetService("Players").LocalPlayer
@@ -89,7 +89,7 @@ Tabs.AimbotTab:Toggle({
     end
 })
 
--- ESP Mobs and Item
+-- // ESP System \\ --
 local ESPHandles = {}
 local ESPItemsEnabled = false
 local ESPMobsEnabled = false
@@ -121,7 +121,7 @@ local function CreateESP(object, color)
     textLabel.TextSize = 7
     textLabel.Parent = billboard
 
-    ESPHandles[object] = {Highlight = highlight, Billboard = billboard, Color = color}
+    ESPHandles[object] = {Highlight = highlight, Billboard = billboard}
 end
 
 local function ClearESP()
@@ -133,16 +133,12 @@ local function ClearESP()
 end
 
 local function UpdateESPItems()
-    if not ESPItemsEnabled then
-        ClearESP()
-        return
-    end
-
+    if not ESPItemsEnabled then return end
     ClearESP()
     local runtimeItems = workspace:FindFirstChild("RuntimeItems")
     if runtimeItems then
-        for _, item in ipairs(runtimeItems:GetDescendants()) do
-            if item:IsA("Model") then
+        for _, item in ipairs(runtimeItems:GetChildren()) do
+            if item:IsA("Model") and item:FindFirstChild("PrimaryPart") then
                 CreateESP(item, Color3.new(1, 0, 0)) 
             end
         end
@@ -150,23 +146,19 @@ local function UpdateESPItems()
 end
 
 local function UpdateESPMobs()
-    if not ESPMobsEnabled then
-        ClearESP()
-        return
-    end
-
+    if not ESPMobsEnabled then return end
     ClearESP()
     local nightEnemies = workspace:FindFirstChild("NightEnemies")
     if nightEnemies then
-        for _, enemy in ipairs(nightEnemies:GetDescendants()) do
-            if enemy:IsA("Model") then
+        for _, enemy in ipairs(nightEnemies:GetChildren()) do
+            if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                 CreateESP(enemy, Color3.new(0, 0, 1))
             end
         end
     end
 end
 
-Tabs.AimbotTab:Toggle({
+Tabs.ESPTab:Toggle({
     Title = "ESP Items",
     Default = false,
     Callback = function(value)
@@ -175,7 +167,7 @@ Tabs.AimbotTab:Toggle({
     end
 })
 
-Tabs.AimbotTab:Toggle({
+Tabs.ESPTab:Toggle({
     Title = "ESP Mobs",
     Default = false,
     Callback = function(value)
@@ -184,15 +176,12 @@ Tabs.AimbotTab:Toggle({
     end
 })
 
--- Bring item
-local ITEM_FOLDER = "RuntimeItems"
-local PLAYER = game:GetService("Players").LocalPlayer
-
+-- // Bring Item System \\ --
 local function bringWeaponsAndAmmo()
-    local itemsFolder = workspace:FindFirstChild(ITEM_FOLDER)
+    local itemsFolder = workspace:FindFirstChild("RuntimeItems")
     if not itemsFolder then return end
 
-    local char = PLAYER.Character
+    local char = Player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
     local hrp = char.HumanoidRootPart
@@ -200,17 +189,11 @@ local function bringWeaponsAndAmmo()
     for _, item in ipairs(itemsFolder:GetChildren()) do
         if item:IsA("Model") then
             local lowerName = item.Name:lower()
-            if lowerName:find("gun") or lowerName:find("weapon") or lowerName:find("ammo") then
+            if lowerName:find("gun") or lowerName:find("weapon") or lowerName:find("ammo") 
+                or lowerName:find("revolver") or lowerName:find("rifle") or lowerName:find("shotgun") then
                 if item.PrimaryPart then
                     item:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 1, 0))
-                else
-                    for _, part in ipairs(item:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.CFrame = hrp.CFrame + Vector3.new(0, 1, 0)
-                        end
-                    end
                 end
-                wait(0.1)
             end
         end
     end
@@ -218,7 +201,5 @@ end
 
 Tabs.BringItemTab:Button({
     Title = "Bring Weapons & Ammo",
-    Callback = function()
-        bringWeaponsAndAmmo()
-    end
+    Callback = bringWeaponsAndAmmo
 })

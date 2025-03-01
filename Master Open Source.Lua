@@ -1,5 +1,5 @@
 -- do not copy or steal
--- this script is keyless
+-- this script is meant to be keyless
 
 loadstring(game:HttpGet('https://sirius.menu/rayfield', true))()
 

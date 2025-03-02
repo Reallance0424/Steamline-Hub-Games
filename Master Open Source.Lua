@@ -1,5 +1,6 @@
--- do not copy or steal
--- this script is meant to be keyless
+-- Do not copy or steal
+-- This script is meant to be keyless
+-- Made by reallance0424
 
 loadstring(game:HttpGet('https://sirius.menu/rayfield', true))()
 
@@ -7,7 +8,7 @@ local Window = Rayfield:CreateWindow({
    Name = "Steamline Hub | Dead Rails",
    LoadingTitle = "Loading Steamline Hub...",
    LoadingSubtitle = "by reallance0424",
-   Theme = "Default",
+   Theme = "Dark", -- Ensure "Dark" theme is valid
    KeySystem = false
 })
 
@@ -20,7 +21,7 @@ local Player = game:GetService("Players").LocalPlayer
 
 local validNPCs = {}
 local aimbotEnabled = false
-local targetPart = "Head" -- ?
+local targetPart = "Head" -- Default target
 
 local function isNPC(obj)
     return obj:IsA("Model") 
@@ -102,7 +103,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 local aimbotToggle = AimTab:CreateToggle({
-    Name = "Enable Aimbot",
+    Name = "Aimbot",
     CurrentValue = false,
     Flag = "AimbotToggle",
     Callback = function(Value)
@@ -120,10 +121,19 @@ local targetDropdown = AimTab:CreateDropdown({
     end
 })
 
+local targetDropdown = AimTab:CreateDropdown({
+    Name = "Target Part",
+    Options = {"Head", "HumanoidRootPart"},
+    CurrentOption = "Head",
+    Flag = "TargetPartDropdown",
+    Callback = function(Option)
+        targetPart = Option
+    end
+})
+
 local ESPHandles = {}
 local ESPItemsEnabled = false
 
--- ?
 local function CreateESP(object, color)
     if not object or not object.PrimaryPart then return end
     if ESPHandles[object] then return end
@@ -154,7 +164,6 @@ local function CreateESP(object, color)
     ESPHandles[object] = {Highlight = highlight, Billboard = billboard}
 end
 
--- ?
 local function ClearESP()
     for _, handles in pairs(ESPHandles) do
         if handles.Highlight then handles.Highlight:Destroy() end
@@ -163,7 +172,6 @@ local function ClearESP()
     ESPHandles = {}
 end
 
--- ?
 local function UpdateItemESP()
     ClearESP()
 
@@ -172,22 +180,20 @@ local function UpdateItemESP()
         if runtimeItems then
             for _, item in ipairs(runtimeItems:GetChildren()) do
                 if item:IsA("Model") then
-                    CreateESP(item, Color3.new(1, 0, 0)) -- Red for Items
+                    CreateESP(item, Color3.new(1, 1, 1))
                 end
             end
         end
     end
 end
 
--- ?
 local function AutoUpdateESP()
     while ESPItemsEnabled do
         UpdateItemESP()
-        wait(0.5) -- ?
+        wait(0.5)
     end
 end
 
--- ?
 EspTab:CreateToggle({
     Name = "ESP Items",
     CurrentValue = false,
@@ -318,9 +324,7 @@ local collectAllButton = Tab:CreateButton({
 })
 
 local ITEM_FOLDER = "RuntimeItems"
-local PLAYER = game:GetService("Players").LocalPlayer
 
--- ?
 local function bringWeaponsAndAmmo()
     local itemsFolder = workspace:FindFirstChild(ITEM_FOLDER)
     if not itemsFolder then
@@ -328,7 +332,7 @@ local function bringWeaponsAndAmmo()
         return
     end
 
-    local char = PLAYER.Character
+    local char = Player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then
         warn("Character not found!")
         return
@@ -336,29 +340,14 @@ local function bringWeaponsAndAmmo()
 
     local hrp = char.HumanoidRootPart
 
-    -- ?
-    print("Checking items in", ITEM_FOLDER)
-    for _, item in ipairs(itemsFolder:GetChildren()) do
-        print("Found item:", item.Name) -- ?
-    end
-
     for _, item in ipairs(itemsFolder:GetChildren()) do
         if item:IsA("Model") then
             local lowerName = item.Name:lower()
             if lowerName:find("gun") or lowerName:find("weapon") or lowerName:find("ammo") 
                 or lowerName:find("revolver") or lowerName:find("rifle") or lowerName:find("shotgun") then
-                
                 if item.PrimaryPart then
-                    item:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 1, 0)) -- Move item to player
-                else
-                    -- ?
-                    for _, part in ipairs(item:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.CFrame = hrp.CFrame + Vector3.new(0, 1, 0)
-                        end
-                    end
+                    item:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 1, 0))
                 end
-                wait(0.1) -- ?
             end
         end
     end
@@ -370,18 +359,3 @@ Tab:CreateButton({
         bringWeaponsAndAmmo()
     end
 })
-
-local MiscTab = Window:CreateTab("Misc", 4483362458)
-
-local defaultColor = Color3.fromRGB(25, 25, 25)
-
-local ColorPicker = MiscTab:CreateColorPicker({
-    Name = "UI Background Color",
-    Color = defaultColor,
-    Flag = "BackgroundColorPicker",
-    Callback = function(Value)
-        Rayfield.BackgroundColor3 = Value
-    end
-})
-
-Rayfield.BackgroundColor3 = defaultColor

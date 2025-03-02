@@ -2,7 +2,7 @@
 -- This script is meant to be keyless
 -- Made by reallance0424
 
-loadstring(game:HttpGet('https://sirius.menu/rayfield', true))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Steamline Hub | Dead Rails",
